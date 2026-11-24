@@ -58,7 +58,7 @@ View the product route, event history and current status.
 
 Phase 1 is a frontend simulation. Hashes, mock signatures and NFT displays must not claim to prove an actual on-chain transaction or real-world authenticity.
 
-## Proposed international scenarios — awaiting agreement
+## Confirmed international scenarios
 
 These are fictional teaching scenarios, not descriptions of actual customs procedures or transport services. Specific documents, checkpoints and countries' rules have not been selected.
 
@@ -67,19 +67,12 @@ These are fictional teaching scenarios, not descriptions of actual customs proce
 3. Italy → Armenia: a submitted document differs from its recorded fingerprint; an additional correction event preserves the original history.
 4. Armenia → Germany: damaged packaging is detected at handover; the receiver declines to sign, custody stays with the sender, and an incident must be resolved before retrying.
 
-Exact routes, incident behavior and resolutions are proposals, not confirmed user decisions.
+The user approved these four scenarios, customs as a controller-managed route stage, and two-party custody signatures. Custody remains with the sender until the receiver signs. A declined transfer cannot change custody.
 
-## Open decisions
+## Consumer experience
 
-- Final product name and clothing brand/demo data.
-- Clothing fields and example batches.
-- Demonstration organizations, route stops and four international scenarios.
-- Exact lifecycle states and transfer/multisig rules.
-- Whether customs is a route stage managed from the controller interface or an additional role.
-- Demo organization identities and wallet behavior when switching roles.
-- Consumer-visible versus internal information.
-- QR scanning behavior and fallback input.
-- Map and location simulation behavior.
-- Local persistence and a repeatable demonstration/reset flow.
-- Frontend tooling and any additional instructor restrictions.
-- Detailed screen composition and delivery/run expectations.
+The user requested only essential information for consumers. Show clothing characteristics, origin, current delivery status and a simple route/history. Keep transaction mechanics, hashes, staff wallets, signatures and internal documents inside staff interfaces.
+
+## Implementation scope
+
+See [frontend-spec.md](frontend-spec.md) for the concrete frontend behavior, demonstration controls and validation plan. Routine implementation choices use the agreed light Armenian interface and Phase 1 scope.
