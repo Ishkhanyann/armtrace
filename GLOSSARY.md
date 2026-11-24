@@ -4,6 +4,10 @@ Clothing supply-chain traceability for manufacturers, logistics operators, contr
 
 ## Language
 
+**Batch / Խմբաքանակ**:
+A quantity of clothing with the same article, color and size, tracked together through the supply chain under one QR code.
+_Avoid_: Individual item, shipment.
+
 **Manufacturer / Արտադրող**:
 The organization that produces clothing and registers its batches in the supply chain.
 

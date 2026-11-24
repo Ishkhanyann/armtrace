@@ -20,6 +20,9 @@ The two main coursework documents cover the same product. Their different resear
 5. Use GitHub for project tracking.
 6. Create a new public repository.
 7. Interview the user before implementing the frontend.
+8. Track whole clothing batches: one article, color and size per batch, with one QR code per batch. Individual-item codes and batch splitting are deferred.
+9. Include four international demonstration routes with different use cases and problems, including customs. The originally suggested single domestic route is superseded.
+10. Use a demonstration role switcher without registration. Staff use simulated wallets; consumers may view history without signing in.
 
 `ArmTrace` / `armtrace` is a provisional project and repository name selected during setup. The user has not chosen a final product brand.
 
@@ -55,14 +58,25 @@ View the product route, event history and current status.
 
 Phase 1 is a frontend simulation. Hashes, mock signatures and NFT displays must not claim to prove an actual on-chain transaction or real-world authenticity.
 
+## Proposed international scenarios — awaiting agreement
+
+These are fictional teaching scenarios, not descriptions of actual customs procedures or transport services. Specific documents, checkpoints and countries' rules have not been selected.
+
+1. Armenia → Georgia: successful clothing delivery, with a complete custody trail and consumer passport.
+2. Georgia → Armenia: customs hold for a missing supporting document, followed by document submission and release.
+3. Italy → Armenia: a submitted document differs from its recorded fingerprint; an additional correction event preserves the original history.
+4. Armenia → Germany: damaged packaging is detected at handover; the receiver declines to sign, custody stays with the sender, and an incident must be resolved before retrying.
+
+Exact routes, incident behavior and resolutions are proposals, not confirmed user decisions.
+
 ## Open decisions
 
 - Final product name and clothing brand/demo data.
-- Batch-level versus individual-item consumer lookup.
-- Clothing fields, variants and whether a batch may be split.
-- Demonstration organizations, locations and route.
+- Clothing fields and example batches.
+- Demonstration organizations, route stops and four international scenarios.
 - Exact lifecycle states and transfer/multisig rules.
-- Role entry, demo identities and wallet behavior.
+- Whether customs is a route stage managed from the controller interface or an additional role.
+- Demo organization identities and wallet behavior when switching roles.
 - Consumer-visible versus internal information.
 - QR scanning behavior and fallback input.
 - Map and location simulation behavior.

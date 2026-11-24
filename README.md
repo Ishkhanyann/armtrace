@@ -14,8 +14,11 @@ Phase 1 delivers an interactive frontend simulation. Database implementation and
 
 - One shared application for both coursework participants.
 - Clothing supply chains.
+- One QR code per batch of the same clothing article, color and size.
+- Four international demonstration routes, including customs-related situations; detailed scenarios are being agreed.
 - Armenian interface; familiar Web3 terms may remain in English.
 - Light business interface with blue and green accents.
+- A demonstration role switcher and consumer access without registration.
 - Public GitHub repository for source code and issue tracking.
 
 ## Required interfaces
