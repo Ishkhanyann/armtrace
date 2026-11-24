@@ -104,7 +104,7 @@ export default function App() {
     if (hash.startsWith('#/passport/') && actor.role !== 'consumer') setIdentity('consumer');
     else if (!hash.startsWith('#/passport/') && actor.role === 'consumer')
       setIdentity('manufacturer');
-  }, [hash, actor.role, setIdentity]);
+  }, [hash, actor.role, setIdentity, tx?.phase]);
   const page = hash.replace('#/', '').split('/')[0] || 'overview';
   const current = navigation.find((item) => item.id === page) ?? navigation[0];
   const batch = state.batches.find((item) => item.id === selectedId) ?? state.batches[0];
@@ -302,7 +302,7 @@ export default function App() {
                 </div>
               </>
             )}
-            <WalletControl />
+            <WalletControl publicView={isPublic} />
           </div>
         </header>
         {isPublic ? (
@@ -491,7 +491,7 @@ export default function App() {
           </button>
         </Modal>
       )}
-      <TransactionModal />
+      {!isPublic && <TransactionModal />}
       {notice && (
         <div className="toast" role="status">
           <CheckCircleIcon />

@@ -55,15 +55,13 @@ test('failed signing has no custody effect, then two parties successfully comple
 test('customs requires the matching original before controller release', async ({ page }) => {
   await documentsAsAdmin(page, 'AT-2026-002');
   await expect(page.getByRole('button', { name: 'Թույլատրել շարունակել երթուղին' })).toBeDisabled();
-  await page
-    .getByLabel('Վերբեռնել փաստաթուղթ')
-    .setInputFiles({
-      name: 'original.txt',
-      mimeType: 'text/plain',
-      buffer: Buffer.from(
-        'ArmTrace educational packing list\nBatch: AT-2026-002\nDocument: original\n',
-      ),
-    });
+  await page.getByLabel('Վերբեռնել փաստաթուղթ').setInputFiles({
+    name: 'original.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from(
+      'ArmTrace educational packing list\nBatch: AT-2026-002\nDocument: original\n',
+    ),
+  });
   await sign(page);
   await page
     .getByLabel('Լուծման նկարագրություն')
@@ -73,19 +71,53 @@ test('customs requires the matching original before controller release', async (
   await expect(page.getByText('Բաց խնդիրներ չկան', { exact: true })).toBeVisible();
 });
 
+test('changing identity while a file is hashing cancels the old signer request', async ({
+  page,
+}) => {
+  await documentsAsAdmin(page, 'AT-2026-002');
+  await page.evaluate(() => {
+    const digest = crypto.subtle.digest.bind(crypto.subtle);
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    (window as typeof window & { releaseDigest: () => void }).releaseDigest = release;
+    crypto.subtle.digest = async (...args: Parameters<SubtleCrypto['digest']>) => {
+      await gate;
+      return digest(...args);
+    };
+  });
+  await page
+    .getByLabel('Վերբեռնել փաստաթուղթ')
+    .setInputFiles({
+      name: 'original.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from(
+        'ArmTrace educational packing list\nBatch: AT-2026-002\nDocument: original\n',
+      ),
+    });
+  await expect(page.getByText('Calculating SHA-256…')).toBeVisible();
+  await page.getByLabel('Ցուցադրական դեր', { exact: true }).selectOption('manufacturer');
+  await page.evaluate(() =>
+    (window as typeof window & { releaseDigest: () => void }).releaseDigest(),
+  );
+  await expect(page.getByRole('status')).toContainText('Դերը կամ դրամապանակը փոխվել է');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await documentsAsAdmin(page, 'AT-2026-002');
+  await expect(page.getByRole('heading', { name: 'Փաստաթուղթ դեռ չի ավելացվել' })).toBeVisible();
+});
+
 test('document mismatch keeps old evidence when a corrected version is registered', async ({
   page,
 }) => {
   await documentsAsAdmin(page, 'AT-2026-003');
-  await page
-    .getByLabel('Վերբեռնել փաստաթուղթ')
-    .setInputFiles({
-      name: 'corrected-original.txt',
-      mimeType: 'text/plain',
-      buffer: Buffer.from(
-        'ArmTrace educational packing list\nBatch: AT-2026-003\nDocument: original\n',
-      ),
-    });
+  await page.getByLabel('Վերբեռնել փաստաթուղթ').setInputFiles({
+    name: 'corrected-original.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from(
+      'ArmTrace educational packing list\nBatch: AT-2026-003\nDocument: original\n',
+    ),
+  });
   await sign(page);
   await expect(
     page.getByRole('cell', { name: 'packing-list-edited.txt', exact: false }),

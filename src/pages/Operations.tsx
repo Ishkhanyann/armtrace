@@ -17,8 +17,10 @@ import {
   type Batch,
   type RegisterInput,
   canTransfer,
+  canResolve,
   documentMatches,
   nextStop,
+  nextBatchId,
   organization,
   organizations,
   referenceDocument,
@@ -407,10 +409,7 @@ export function Documents({ batch, onSelect }: { batch: Batch; onSelect: (id: st
                       placeholder="Նկարագրեք ստուգման արդյունքը…"
                     />
                   </label>
-                  <button
-                    className="button primary full"
-                    disabled={batch.status !== 'incident' && !documentMatches(batch)}
-                  >
+                  <button className="button primary full" disabled={!canResolve(batch)}>
                     <CheckCircle2 size={17} />
                     {batch.status === 'customs' ? 'Թույլատրել շարունակել երթուղին' : 'Փակել խնդիրը'}
                   </button>
@@ -505,11 +504,11 @@ export function RegisterModal({
           e.preventDefault();
           setBusy(true);
           try {
-            const id = `AT-2026-${String(Math.max(0, ...state.batches.map((b) => Number(b.id.split('-').at(-1)) || 0)) + 1).padStart(3, '0')}`;
+            const id = nextBatchId(state);
             const expectedHash = await sha256(referenceDocument(id));
             request({
               title: 'Գրանցել նոր խմբաքանակ',
-              command: { type: 'register', input, expectedHash },
+              command: { type: 'register', batchId: id, input, expectedHash },
               onSuccess: onCreated,
             });
             onClose();

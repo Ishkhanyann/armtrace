@@ -234,7 +234,7 @@ const eventSchema = z.object({
   date: z.string().datetime(),
   title: z.string(),
   city: z.string(),
-  type: z.enum(['created', 'custody', 'document', 'incident', 'resolution']),
+  type: z.enum(['created', 'signature', 'custody', 'document', 'incident', 'resolution']),
   hash: transactionHashSchema,
 });
 const documentVersionSchema = z.object({
@@ -303,7 +303,7 @@ export type RegisterInput = Pick<
   | 'routeId'
 >;
 export type Command =
-  | { type: 'register'; input: RegisterInput; expectedHash: string }
+  | { type: 'register'; batchId: string; input: RegisterInput; expectedHash: string }
   | { type: 'transfer'; batchId: string }
   | { type: 'accept'; batchId: string }
   | { type: 'reject'; batchId: string; note: string }
@@ -331,6 +331,18 @@ export function simulationHash() {
 }
 export function documentMatches(batch: Batch) {
   return batch.document.versions.at(-1)?.hash === batch.document.expectedHash;
+}
+export function canResolve(batch: Batch) {
+  const documentRequired = batch.status !== 'incident' || batch.document.versions.length > 0;
+  return (
+    ['customs', 'integrity', 'incident'].includes(batch.status) &&
+    (!documentRequired || documentMatches(batch))
+  );
+}
+export function nextBatchId(state: AppState) {
+  const serial =
+    Math.max(0, ...state.batches.map((batch) => Number(batch.id.split('-').at(-1)) || 0)) + 1;
+  return `AT-2026-${String(serial).padStart(3, '0')}`;
 }
 export function nextStop(batch: Batch) {
   return routeFor(batch.routeId).stops[batch.stage + 1];
@@ -386,7 +398,11 @@ export function executeCommand(
       routeFor(input.routeId).source === actor.orgId,
       'Ընտրեք ձեր արտադրամասից մեկնող երթուղի։',
     );
-    batchId = `AT-2026-${String(Math.max(0, ...state.batches.map((b) => Number(b.id.split('-').at(-1)) || 0)) + 1).padStart(3, '0')}`;
+    batchId = nextBatchId(state);
+    requireCondition(
+      command.batchId === batchId && /^[a-f0-9]{64}$/.test(command.expectedHash),
+      'Խմբաքանակների ցանկը փոխվել է։ Կրկին բացեք գրանցման ձևը։',
+    );
     title = 'Խմբաքանակի գրանցում';
     next.batches.unshift({
       ...input,
@@ -447,7 +463,7 @@ export function executeCommand(
         hash: receipt.hash,
       };
       title = 'Փոխանցման առաջին ստորագրություն';
-      event('Ուղարկողը ստորագրել է փոխանցումը', 'custody');
+      event('Ուղարկողը ստորագրել է փոխանցումը', 'signature');
     } else if (command.type === 'accept') {
       requireCondition(
         batch.transfer?.to === actor.orgId && batch.transfer.from !== actor.orgId,
@@ -509,11 +525,7 @@ export function executeCommand(
         'Բաց խնդիր չի գտնվել։',
       );
       requireCondition(command.note.trim().length >= 4, 'Ավելացրեք լուծման նկարագրությունը։');
-      if (batch.status !== 'incident' || batch.document.versions.length > 0)
-        requireCondition(
-          documentMatches(batch),
-          'Նախ ավելացրեք բնօրինակին համապատասխան փաստաթուղթ։',
-        );
+      requireCondition(canResolve(batch), 'Նախ ավելացրեք բնօրինակին համապատասխան փաստաթուղթ։');
       batch.status = !nextStop(batch) ? 'delivered' : batch.stage === 0 ? 'ready' : 'in_transit';
       batch.note = '';
       title = 'Խնդիրը լուծված է';
@@ -555,9 +567,7 @@ export function publicPassport(batch: Batch) {
       complete: index <= batch.stage,
     })),
     milestones: batch.events
-      .filter(
-        (e) => e.type === 'created' || (e.type === 'custody' && !e.title.includes('Ուղարկողը')),
-      )
+      .filter((e) => e.type === 'created' || e.type === 'custody')
       .map((e) => ({
         title: e.type === 'created' ? 'Արտադրված է' : 'Տեղափոխումը գրանցված է',
         city: e.city,

@@ -19,17 +19,29 @@ export const publicStatusLabels: Record<BatchStatus, string> = {
   integrity: 'Լրացուցիչ ստուգում',
   incident: 'Առաքումը հետաձգված է',
 };
-export const dateTime = (value: string) =>
-  new Intl.DateTimeFormat('hy-AM', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
-export const shortDate = (value: string) =>
-  new Intl.DateTimeFormat('hy-AM', { day: 'numeric', month: 'short', year: 'numeric' }).format(
-    new Date(value),
-  );
+// Explicit month names also work in browsers whose ICU build falls back to English.
+const months = [
+  'հունվ.',
+  'փետր.',
+  'մարտ',
+  'ապր.',
+  'մայիս',
+  'հունիս',
+  'հուլիս',
+  'օգոս.',
+  'սեպտ.',
+  'հոկտ.',
+  'նոյ.',
+  'դեկտ.',
+];
+export function shortDate(value: string) {
+  const date = new Date(value);
+  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+export function dateTime(value: string) {
+  const date = new Date(value);
+  return `${date.getDate()} ${months[date.getMonth()]} · ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
 export const shortHash = (value: string) => value.slice(0, 8) + '…' + value.slice(-6);
 
 export function downloadBlob(

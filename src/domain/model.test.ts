@@ -29,6 +29,7 @@ describe('custody commands', () => {
     );
     expect(first(awaiting).custodianId).toBe('am-factory');
     expect(first(awaiting).stage).toBe(0);
+    expect(publicPassport(first(awaiting)).milestones).toHaveLength(1);
     expect(() =>
       executeCommand(awaiting, sender, { type: 'accept', batchId: first(initial).id }, receipt),
     ).toThrow('ստացողը');
@@ -115,10 +116,64 @@ describe('custody commands', () => {
         receipt,
       ),
     ).toThrow();
+    state = executeCommand(
+      state,
+      admin,
+      {
+        type: 'upload',
+        batchId: 'AT-2026-001',
+        name: 'altered.txt',
+        hash: await sha256('altered'),
+      },
+      receipt,
+    );
+    state = executeCommand(
+      state,
+      admin,
+      {
+        type: 'upload',
+        batchId: 'AT-2026-001',
+        name: 'original.txt',
+        hash: await sha256(referenceDocument('AT-2026-001')),
+      },
+      receipt,
+    );
+    state = executeCommand(
+      state,
+      admin,
+      { type: 'resolve', batchId: 'AT-2026-001', note: 'Բնօրինակը ստուգված է' },
+      receipt,
+    );
+    expect(first(state).status).toBe('delivered');
   });
 });
 
 describe('document and consumer boundaries', () => {
+  it('keeps a packaging incident open when a document mismatch is added', async () => {
+    let state = await createSeed();
+    const originalNote = state.batches[3].note;
+    state = executeCommand(
+      state,
+      admin,
+      {
+        type: 'upload',
+        batchId: 'AT-2026-004',
+        name: 'altered.txt',
+        hash: await sha256('altered'),
+      },
+      receipt,
+    );
+    expect(state.batches[3].status).toBe('incident');
+    expect(state.batches[3].note).toBe(originalNote);
+    expect(() =>
+      executeCommand(
+        state,
+        admin,
+        { type: 'resolve', batchId: 'AT-2026-004', note: 'Վերափաթեթավորվել է' },
+        receipt,
+      ),
+    ).toThrow('փաստաթուղթ');
+  });
   it('checks real file hashes and appends corrections without erasing previous versions', async () => {
     let state = await createSeed();
     const id = 'AT-2026-003';
@@ -198,6 +253,10 @@ describe('document and consumer boundaries', () => {
     const state = await createSeed();
     expect(restoreState(JSON.stringify(state))?.batches).toHaveLength(4);
     expect(restoreState('{bad')).toBeNull();
+    expect(restoreState(JSON.stringify({ ...state, batches: [] }))).toBeNull();
+    const invalidDate = structuredClone(state);
+    invalidDate.batches[0].events[0].date = 'not-a-date';
+    expect(restoreState(JSON.stringify(invalidDate))).toBeNull();
     state.batches[0].stage = 100;
     expect(restoreState(JSON.stringify(state))).toBeNull();
   });

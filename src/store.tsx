@@ -59,6 +59,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
   const [tx, setTx] = useState<TransactionView | null>(null);
   const [notice, setNotice] = useState('');
+  const actorRef = useRef(actor);
+  actorRef.current = actor;
   const stateRef = useRef(state);
   stateRef.current = state;
   const busy = useRef(false);
@@ -107,6 +109,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTx(null);
   }, []);
   const request = (intent: TransactionIntent) => {
+    if (busy.current) {
+      setNotice('Սպասեք ընթացիկ գործարքի ավարտին, ապա կրկին փորձեք։');
+      return;
+    }
+    if (
+      actorRef.current.orgId !== actor.orgId ||
+      actorRef.current.role !== actor.role ||
+      actorRef.current.connected !== actor.connected
+    ) {
+      setNotice('Դերը կամ դրամապանակը փոխվել է։ Կրկին կատարեք գործողությունը։');
+      return;
+    }
     if (!actor.connected) {
       setNotice('Գործողությունը կատարելու համար միացրեք դրամապանակը։');
       return;

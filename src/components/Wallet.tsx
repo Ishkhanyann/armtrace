@@ -14,17 +14,18 @@ import { organization, walletAddress } from '../domain/model';
 import { shortHash } from '../lib/format';
 import { Modal } from './UI';
 
-export function WalletControl() {
+export function WalletControl({ publicView = false }: { publicView?: boolean }) {
   const { actor, state, connect, disconnect, faucet, notify } = useApp();
   const [open, setOpen] = useState(false);
+  const connected = actor.connected && !publicView;
   return (
     <>
       <button
-        className={`button wallet-button ${actor.connected ? 'connected' : 'primary'}`}
+        className={`button wallet-button ${connected ? 'connected' : 'primary'}`}
         onClick={() => setOpen(true)}
       >
         <Wallet size={16} />
-        {actor.connected ? (
+        {connected ? (
           <>
             <span className="mono">{shortHash(walletAddress(actor.orgId))}</span>
             <span className="wallet-balance">
@@ -37,7 +38,7 @@ export function WalletControl() {
       </button>
       {open && (
         <Modal
-          title={actor.connected ? 'Ձեր դրամապանակը' : 'Միացնել դրամապանակը'}
+          title={connected ? 'Ձեր դրամապանակը' : 'Միացնել դրամապանակը'}
           onClose={() => setOpen(false)}
         >
           <div className="wallet-brand">
@@ -45,7 +46,7 @@ export function WalletControl() {
           </div>
           <h3 className="center">ArmTrace Demo Wallet</h3>
           <p className="muted center">Միայն ուսումնական սիմուլյացիայի համար</p>
-          {actor.role === 'consumer' ? (
+          {publicView || actor.role === 'consumer' ? (
             <>
               <div className="info-box">Ապրանքի պատմությունը դիտելու համար դրամապանակ պետք չէ։</div>
               <button className="button primary full" onClick={() => setOpen(false)}>
